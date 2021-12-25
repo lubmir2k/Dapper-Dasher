@@ -23,13 +23,24 @@ int main()
         BeginDrawing();
         ClearBackground(WHITE);
 
+        // Perform ground check
+        if(pos_y >= winHeight - height)
+        {
+            //rectange is on the ground
+            velocity = 0;
+        }
+        else
+        {
+            // Rectangle is in the air - apply gravity
+            velocity += gravity;
+        }
+
         if(IsKeyPressed(KEY_SPACE))
         {
             velocity -= 10;
         }
 
-        // Apply gravity
-        velocity += gravity;
+       
         
         // Update position
         pos_y += velocity;
