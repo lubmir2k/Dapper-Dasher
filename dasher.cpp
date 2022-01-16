@@ -10,11 +10,11 @@ int main()
     // Acceleration due to gravity (pixels per second)
     const int gravity{1'000};
 
-    Texture2D scarfyTex = LoadTexture("assets/12_nebula_spritesheet.png");
+    Texture2D scarfyTex = LoadTexture("assets/testA_Twirl hair_0deg.png");
     Rectangle scarfyRec;
-    Vector2 frameSize {100, 100 };
-    int framesWide { 8 };
-    int maxFrame { 60 };
+    Vector2 frameSize {138, 197 };
+    int framesWide { 59 };
+    int maxFrame { 799 };
     
     scarfyRec.width = frameSize.x;
     scarfyRec.height = frameSize.y;
@@ -23,11 +23,11 @@ int main()
     Vector2 scarfyPos;
     
     scarfyPos.x = window_width / 2 - scarfyRec.width / 2;
-    scarfyPos.y = window_height / 2 - scarfyRec.height;
+    scarfyPos.y = window_height - scarfyRec.height;
 
     int frame{};
     // Amount of time before updating animation frame - one twelfth of a second
-    const float updateTime{static_cast<float>(1.0 / 12.0)};
+    const float updateTime{static_cast<float>(1.0 / 60.0)};
     float runningTime{};
 
     bool isInAir{};
@@ -83,7 +83,6 @@ int main()
                 frame = 0;
             }
         }
-
 
         DrawTextureRec(scarfyTex, scarfyRec, scarfyPos, WHITE);
         EndDrawing();
