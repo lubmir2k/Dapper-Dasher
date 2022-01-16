@@ -2,40 +2,50 @@
 
 int main()
 {
-    const int winWidth{512};
-    const int winHeight{380};
-
-    InitWindow(winWidth, winHeight, "Dapper Dasher");
+    constexpr int window_width{512};
+    constexpr int window_height{380};
+    
+    InitWindow(window_width, window_height, "Dapper Dasher");
 
     // Acceleration due to gravity (pixels per second)
     const int gravity{1'000};
 
-    Texture2D scarfy = LoadTexture("assets/testA_Twirl hair_0deg.png");
+    Texture2D scarfyTex = LoadTexture("assets/12_nebula_spritesheet.png");
     Rectangle scarfyRec;
-    scarfyRec.width = scarfy.width / 59;
-    scarfyRec.height = scarfy.height / 21;
+    Vector2 frameSize {100, 100 };
+    int framesWide { 8 };
+    int maxFrame { 60 };
+    
+    scarfyRec.width = frameSize.x;
+    scarfyRec.height = frameSize.y;
     scarfyRec.x = 0;
     scarfyRec.y = 0;
     Vector2 scarfyPos;
-    scarfyPos.x = winWidth / 2 - scarfyRec.width / 2;
-    scarfyPos.y = winHeight / 2 - scarfyRec.height;
+    
+    scarfyPos.x = window_width / 2 - scarfyRec.width / 2;
+    scarfyPos.y = window_height / 2 - scarfyRec.height;
+
+    int frame{};
+    // Amount of time before updating animation frame - one twelfth of a second
+    const float updateTime{static_cast<float>(1.0 / 12.0)};
+    float runningTime{};
 
     bool isInAir{};
     const int jumpVel{-600};
-    
-    int velocity{0};
-    
-    SetTargetFPS(30);
 
-    while(!WindowShouldClose())
+    int velocity{0};
+
+    SetTargetFPS(60);
+
+    while (!WindowShouldClose())
     {
         const float deltaTime{GetFrameTime()};
-        
+
         BeginDrawing();
         ClearBackground(WHITE);
 
         // Perform ground check
-        if(scarfyPos.y >= winHeight - scarfyRec.height)
+        if (scarfyPos.y >= window_height - scarfyRec.height)
         {
             // Rectangle is on the ground
             velocity = 0;
@@ -48,18 +58,36 @@ int main()
             isInAir = true;
         }
 
-        if(IsKeyPressed(KEY_SPACE) && !isInAir)
+        if (IsKeyPressed(KEY_SPACE) && !isInAir)
         {
             velocity += jumpVel;
         }
 
-       
-        
-        // Update position
+
+        // Update the position
         scarfyPos.y += velocity * deltaTime;
-        DrawTextureRec(scarfy, scarfyRec, scarfyPos, WHITE);
+
+        // Update running time
+        runningTime += deltaTime;
+        if (runningTime >= updateTime)
+        {
+            runningTime = 0.0;
+
+            // Update the animation frame
+            //scarfyRec.x = frame * scarfyRec.width;
+            scarfyRec.x =(frame % framesWide) * frameSize.x;
+            scarfyRec.y = (int)(frame / framesWide) * frameSize.y;
+            frame++;
+            if (frame > maxFrame)
+            {
+                frame = 0;
+            }
+        }
+
+
+        DrawTextureRec(scarfyTex, scarfyRec, scarfyPos, WHITE);
         EndDrawing();
     }
-    UnloadTexture(scarfy);
+    UnloadTexture(scarfyTex);
     CloseWindow();
 }
