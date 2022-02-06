@@ -22,20 +22,30 @@ int main()
     // Acceleration due to gravity (pixels per second)
     const int gravity{1'000};
 
-    // Nebula variables
-    Texture2D nebulaTex = LoadTexture("assets/12_nebula_spritesheet.png");
-    Rectangle nebRec{0, 0, nebulaTex.width / 8, nebulaTex.height / 8};
-    Vector2 nebPos{window_width, window_height - nebRec.height};
-
-    // Nebula animation variables
-    int nebFrame{};
-    const float nebUpdateTime{static_cast<float>(1.0 / 12.0)};
-    float nebRunningTime{};
-
     // Nebula x velocity (pixels/second)
     int nebVel{-200};
+    
+    Texture2D nebulaTex = LoadTexture("assets/12_nebula_spritesheet.png");
+    Vector2 nebFrameSize{100, 100};
+    int nebFramesWide{8}; // TODO add to struct
+    int nebMaxFrame{61}; // TODO add to struct
+    AnimData nebData;
+    nebData.rect.width = nebFrameSize.x;
+    nebData.rect.height = nebFrameSize.y;
+    nebData.rect.x = 0;
+    nebData.rect.y = 0;
+    nebData.pos.x = window_width  + 300;
+    nebData.pos.y = window_height - nebData.rect.height;
+    nebData.frame = 0;
+    nebData.updateTime = 1.0/16.0;
+    nebData.runningTime = 0.0;
+    
 
     // Scarfy variables
+    bool isInAir{};
+    int velocity{0};
+    const int jumpVel{-600};
+    
     Texture2D scarfyTex = LoadTexture("assets/testA_Twirl hair_0deg.png");
     Vector2 frameSize{138, 197};
     int framesWide{59}; // TODO add to struct
@@ -51,13 +61,8 @@ int main()
     scarfyData.updateTime = 1.0/60.0;
     scarfyData.runningTime = 0.0;
 
-    bool isInAir{};
-    const int jumpVel{-600};
-
-    int velocity{0};
-
     SetTargetFPS(60);
-
+    
     while (!WindowShouldClose())
     {
         const float deltaTime{GetFrameTime()};
@@ -85,7 +90,7 @@ int main()
         }
 
         // Update nebula's position
-        nebPos.x += nebVel * deltaTime;
+        nebData.pos.x += nebVel * deltaTime;
 
         // Update Scarfy's position
         scarfyData.pos.y += velocity * deltaTime;
@@ -111,20 +116,22 @@ int main()
             }
         }
         // Update nebula animation frame
-        nebRunningTime += deltaTime;
-        if (nebRunningTime >= nebUpdateTime)
+        nebData.runningTime += deltaTime;
+        if (nebData.runningTime >= nebData.updateTime)
         {
-            nebRunningTime = 0.0;
-            nebRec.x = nebFrame * nebRec.width;
-            nebFrame++;
-            if (nebFrame > 7)
+            nebData.runningTime = 0.0;
+            
+            nebData.rect.x = (nebData.frame % nebFramesWide) * nebFrameSize.x;
+            nebData.rect.y = (int)(nebData.frame / nebFramesWide) * nebFrameSize.y;
+            nebData.frame++;
+            if (nebData.frame > nebMaxFrame)
             {
-                nebFrame = 0;
+                nebData.frame = 0;
             }
         }
 
         // Draw nebula
-        DrawTextureRec(nebulaTex, nebRec, nebPos, WHITE);
+        DrawTextureRec(nebulaTex, nebData.rect, nebData.pos, WHITE);
 
         // Draw Scarfy
         DrawTextureRec(scarfyTex, scarfyData.rect, scarfyData.pos, WHITE);
