@@ -1,20 +1,47 @@
 #include "raylib.h"
 
+constexpr int window_width{512};
+constexpr int window_height{380};
+
 struct AnimData
 {
     Rectangle rect;
     Vector2 pos;
     Vector2 frameSize;
     int frame;
-    float updateTime;
+    int maxFrame;
+    int framesWide;
+    double updateTime;
     float runningTime;
 };
 
+bool isOnGround(AnimData scarfyData)
+{
+    return scarfyData.pos.y >= window_height - scarfyData.rect.height;
+}
+
+AnimData updateAnimData(AnimData data, float deltaTime)
+{
+    // Update running time
+    data.runningTime += deltaTime;
+    if (data.runningTime >= data.updateTime)
+    {
+         data.runningTime = 0.0;
+
+        // Update the animation frame
+        data.rect.x = data.frame % data.framesWide * data.frameSize.x;
+        data.rect.y = data.frame / data.framesWide * data.frameSize.y;
+        data.frame++;
+        if (data.frame > data.maxFrame)
+        {
+            data.frame = 0;
+        }
+    }
+    return data;
+}
+
 int main()
 {
-    constexpr int window_width{512};
-    constexpr int window_height{380};
-
     //SetConfigFlags(FLAG_MSAA_4X_HINT);
 
     InitWindow(window_width, window_height, "Dapper Dasher");
@@ -24,37 +51,47 @@ int main()
 
     // Nebula x velocity (pixels/second)
     int nebVel{-200};
-    
-    Texture2D nebulaTex = LoadTexture("assets/12_nebula_spritesheet.png");
-    Vector2 nebFrameSize{100, 100};
-    int nebFramesWide{8}; // TODO add to struct
-    int nebMaxFrame{61}; // TODO add to struct
-    AnimData nebData;
-    nebData.rect.width = nebFrameSize.x;
-    nebData.rect.height = nebFrameSize.y;
-    nebData.rect.x = 0;
-    nebData.rect.y = 0;
-    nebData.pos.x = window_width  + 300;
-    nebData.pos.y = window_height - nebData.rect.height;
-    nebData.frame = 0;
-    nebData.updateTime = 1.0/16.0;
-    nebData.runningTime = 0.0;
-    
 
+    Texture2D nebulaTex = LoadTexture("assets/12_nebula_spritesheet.png");
+
+    const int sizeOfNebulae{2};
+    AnimData nebData[sizeOfNebulae]{};
+
+    for (int i = 0; i < sizeOfNebulae; i++)
+    {
+        nebData[i].frameSize.x = 100;
+        nebData[i].frameSize.y = 100;
+        nebData[i].framesWide = 8;
+        nebData[i].maxFrame = 61;
+        nebData[i].rect.width = nebData[i].frameSize.x;
+        nebData[i].rect.height = nebData[i].frameSize.y;
+        //nebData.rect.x = 0;
+        //nebData.rect.y = 0;
+        nebData[i].pos.x = window_width + 300;
+        nebData[i].pos.y = window_height - nebData[i].rect.height;
+        nebData[i].frame = 0;
+        nebData[i].updateTime = 1.0 / 16.0;
+        nebData[i].runningTime = 0.0;
+    }
+
+    nebData[1].pos.x = window_width + 600;
+    nebData[1].pos.y = window_height / 4 - nebData[1].rect.height;
+ 
     // Scarfy variables
     bool isInAir{};
-    int velocity{0};
+    float velocity{0};
     const int jumpVel{-600};
     
     Texture2D scarfyTex = LoadTexture("assets/testA_Twirl hair_0deg.png");
-    Vector2 frameSize{138, 197};
-    int framesWide{59}; // TODO add to struct
-    int maxFrame{799}; // TODO add to struct
     AnimData scarfyData;
-    scarfyData.rect.width = frameSize.x;
-    scarfyData.rect.height = frameSize.y;
-    scarfyData.rect.x = 0;
-    scarfyData.rect.y = 0;
+    scarfyData.frameSize.x = 138;
+    scarfyData.frameSize.y = 197;
+    scarfyData.framesWide= 59;
+    scarfyData.maxFrame = 799;
+    scarfyData.rect.width = scarfyData.frameSize.x;
+    scarfyData.rect.height = scarfyData.frameSize.y;
+    //scarfyData.rect.x = 0;
+    //scarfyData.rect.y = 0;
     scarfyData.pos.x = window_width / 2 - scarfyData.rect.width / 2;
     scarfyData.pos.y = window_height - scarfyData.rect.height;
     scarfyData.frame = 0;
@@ -71,7 +108,7 @@ int main()
         ClearBackground(WHITE);
 
         // Perform ground check
-        if (scarfyData.pos.y >= window_height - scarfyData.rect.height)
+        if (isOnGround(scarfyData))
         {
             // Rectangle is on the ground
             velocity = 0;
@@ -90,7 +127,10 @@ int main()
         }
 
         // Update nebula's position
-        nebData.pos.x += nebVel * deltaTime;
+        for (int i = 0; i < sizeOfNebulae; i++)
+        {
+            nebData[i].pos.x += nebVel * deltaTime;
+        }
 
         // Update Scarfy's position
         scarfyData.pos.y += velocity * deltaTime;
@@ -98,40 +138,17 @@ int main()
         // Update Scarfy's animation frame
         if (!isInAir)
         {
-            // Update running time
-            scarfyData.runningTime += deltaTime;
-            if (scarfyData.runningTime >= scarfyData.updateTime)
-            {
-                scarfyData.runningTime = 0.0;
-
-                // Update the animation frame
-                //scarfyRec.x = frame * scarfyRec.width;
-                scarfyData.rect.x = (scarfyData.frame % framesWide) * frameSize.x;
-                scarfyData.rect.y = (int)(scarfyData.frame / framesWide) * frameSize.y;
-                scarfyData.frame++;
-                if (scarfyData.frame > maxFrame)
-                {
-                    scarfyData.frame = 0;
-                }
-            }
+            scarfyData = updateAnimData(scarfyData, deltaTime);
         }
-        // Update nebula animation frame
-        nebData.runningTime += deltaTime;
-        if (nebData.runningTime >= nebData.updateTime)
+
+        for (int i = 0; i < sizeOfNebulae; i++)
         {
-            nebData.runningTime = 0.0;
-            
-            nebData.rect.x = (nebData.frame % nebFramesWide) * nebFrameSize.x;
-            nebData.rect.y = (int)(nebData.frame / nebFramesWide) * nebFrameSize.y;
-            nebData.frame++;
-            if (nebData.frame > nebMaxFrame)
-            {
-                nebData.frame = 0;
-            }
+            nebData[i] = updateAnimData(nebData[i], deltaTime);
+
+            // Draw nebulae
+            DrawTextureRec(nebulaTex, nebData[i].rect, nebData[i].pos, WHITE);
         }
 
-        // Draw nebula
-        DrawTextureRec(nebulaTex, nebData.rect, nebData.pos, WHITE);
 
         // Draw Scarfy
         DrawTextureRec(scarfyTex, scarfyData.rect, scarfyData.pos, WHITE);
