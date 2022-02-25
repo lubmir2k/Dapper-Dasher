@@ -59,8 +59,7 @@ int main()
 
     for (int i = 0; i < sizeOfNebulae; i++)
     {
-        nebData[i].frameSize.x = 100;
-        nebData[i].frameSize.y = 100;
+        nebData[i].frameSize = { 100, 100};
         nebData[i].framesWide = 8;
         nebData[i].maxFrame = 61;
         nebData[i].rect.width = nebData[i].frameSize.x;
@@ -84,8 +83,7 @@ int main()
     
     Texture2D scarfyTex = LoadTexture("assets/testA_Twirl hair_0deg.png");
     AnimData scarfyData;
-    scarfyData.frameSize.x = 138;
-    scarfyData.frameSize.y = 197;
+    scarfyData.frameSize = { 138, 197 };
     scarfyData.framesWide= 59;
     scarfyData.maxFrame = 799;
     scarfyData.rect.width = scarfyData.frameSize.x;
@@ -98,6 +96,9 @@ int main()
     scarfyData.updateTime = 1.0/60.0;
     scarfyData.runningTime = 0.0;
 
+    Texture2D background = LoadTexture("assets/far-buildings.png");
+    float bgX {};
+
     SetTargetFPS(60);
     
     while (!WindowShouldClose())
@@ -106,6 +107,19 @@ int main()
 
         BeginDrawing();
         ClearBackground(WHITE);
+
+        bgX -= 20 * deltaTime;
+        if (bgX <= -background.width * 2)
+        {
+            bgX = 0.0;
+        }
+        
+
+        // Draw the bg
+        Vector2 bg1Pos { bgX, 0.0};
+        DrawTextureEx(background, bg1Pos, 0.0, 2.0, WHITE);
+        Vector2 bg2Pos { bgX + background.width * 2, 0.0 };
+        DrawTextureEx(background, bg2Pos, 0.0, 2.0, WHITE);
 
         // Perform ground check
         if (isOnGround(scarfyData))
@@ -156,5 +170,6 @@ int main()
     }
     UnloadTexture(scarfyTex);
     UnloadTexture(nebulaTex);
+    UnloadTexture(background);
     CloseWindow();
 }
